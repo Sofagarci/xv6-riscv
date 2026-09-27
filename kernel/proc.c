@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "pstat.h"
 
 struct cpu cpus[NCPU];
 
@@ -367,6 +368,8 @@ kexit(int status)
 
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
+// Wait for a child process to exit and return its pid.
+// Return -1 if this process has no children.
 int
 kwait(uint64 addr)
 {
@@ -376,21 +379,17 @@ kwait(uint64 addr)
 
   acquire(&wait_lock);
 
-  for (;;) {
-    // Scan through table looking for exited children.
+  for(;;){
     havekids = 0;
-    for (pp = proc; pp < &proc[NPROC]; pp++) {
-      if (pp->parent == p) {
-        // make sure the child isn't still in exit() or swtch().
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
         acquire(&pp->lock);
 
         havekids = 1;
-        if (pp->state == ZOMBIE) {
-          // Found one.
+        if(pp->state == ZOMBIE){
           pid = pp->pid;
-          if (addr != 0 &&
-              copyout(p->pagetable, p->sz, addr, (char *)&pp->xstate,
-                      sizeof(pp->xstate)) < 0) {
+          if(addr != 0 && copyout(p->pagetable, p->sz, addr, (char *)&pp->xstate,
+                                    sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
             release(&wait_lock);
             return -1;
@@ -405,20 +404,72 @@ kwait(uint64 addr)
       }
     }
 
-    // No point waiting if we don't have any children.
-    if (!havekids || killed(p)) {
+    if(!havekids || killed(p)){
       release(&wait_lock);
       return -1;
     }
 
-    // Wait for a child to exit.
-    sleep_prepare(p); //DOC: wait-sleep
+    sleep_prepare(p);
     release(&wait_lock);
     sleep();
     acquire(&wait_lock);
   }
 }
 
+// Like kwait(), but also returns the child's cputime via a struct rusage*.
+int
+kwait2(uint64 addr, uint64 addr2)
+{
+  struct proc *pp;
+  int havekids, pid;
+  struct proc *p = myproc();
+  struct rusage ru;
+
+  acquire(&wait_lock);
+
+  for(;;){
+    havekids = 0;
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
+        acquire(&pp->lock);
+
+        havekids = 1;
+        if(pp->state == ZOMBIE){
+          pid = pp->pid;
+          ru.cputime = pp->cputime;
+          if(addr != 0 && copyout(p->pagetable, p->sz, addr, (char *)&pp->xstate,
+                                    sizeof(pp->xstate)) < 0) {
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+          if(addr2 != 0 && copyout(p->pagetable, p->sz, addr2, (char *)&ru,
+                                     sizeof(ru)) < 0) {
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+          pp->parent = 0;
+          freeproc(pp);
+          release(&pp->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&pp->lock);
+      }
+    }
+
+    if(!havekids || killed(p)){
+      release(&wait_lock);
+      return -1;
+    }
+
+    sleep_prepare(p);
+    release(&wait_lock);
+    sleep();
+    acquire(&wait_lock);
+  }
+}
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:

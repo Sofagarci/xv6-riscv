@@ -35,7 +35,14 @@ sys_wait(void)
   argaddr(0, &p);
   return kwait(p);
 }
-
+uint64
+sys_wait2(void)
+{
+  uint64 p, ru;
+  argaddr(0, &p);
+  argaddr(1, &ru);
+  return kwait2(p,ru);
+}
 uint64
 sys_sbrk(void)
 {
