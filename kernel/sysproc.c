@@ -117,3 +117,11 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+//added
+uint64
+sys_getprocs(void)
+{
+  uint64 addr;
+  argaddr(0, &addr);   //might need to change. need to run first
+  return getprocs(addr);
+}

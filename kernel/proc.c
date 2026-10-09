@@ -753,3 +753,38 @@ procdump(void)
     printk("\n");
   }
 }
+
+//added
+// Fill the user array at addr with one pstat per in-use process.
+// Returns the number of processes, or -1 on error.
+int
+getprocs(uint64 addr)
+{
+  struct proc *p;
+  struct pstat info;
+  struct proc *me = myproc();
+  int n = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&wait_lock);      // wait_lock before p->lock, same order as the rest of proc.c
+    acquire(&p->lock);
+    if(p->state == UNUSED){
+      release(&p->lock);
+      release(&wait_lock);
+      continue;
+    }
+    info.pid = p->pid;
+    info.state = p->state;
+    info.size = p->sz;
+    info.ppid = p->parent ? p->parent->pid : 0;
+    safestrcpy(info.name, p->name, sizeof(info.name));
+    release(&p->lock);
+    release(&wait_lock);
+
+    // copyout can sleep, so no spinlocks may be held here
+    if(copyout(me->pagetable, me->sz, addr + n * sizeof(info), (char *)&info, sizeof(info)) < 0)
+      return -1;
+    n++;
+  }
+  return n;
+}

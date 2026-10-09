@@ -18,6 +18,7 @@ struct context {
   uint64 s11;
 };
 
+#include "pstat.h" //deleted the enum procstate{} and included new(ish)  pstat.h
 // Per-CPU state.
 struct cpu {
   struct proc *proc;      // The process running on this cpu, or null.
@@ -75,8 +76,6 @@ struct trapframe {
   /* 272 */ uint64 t5;
   /* 280 */ uint64 t6;
 };
-
-enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
 struct proc {

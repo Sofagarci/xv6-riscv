@@ -155,6 +155,8 @@ UPROGS=\
 	$U/_uptime\
 	$U/_time1\
 	$U/_time\
+	$U/_ps\
+#	$U/_pexec\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
@@ -162,8 +164,7 @@ fs.img: mkfs/mkfs README $(UPROGS)
 -include kernel/*.d user/*.d
 
 clean: 
-	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
-	*/*.o */*.d */*.asm */*.sym \
+	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \	*/*.o */*.d */*.asm */*.sym \
 	$K/kernel fs.img \
 	mkfs/mkfs .gdbinit \
         $U/usys.S \
