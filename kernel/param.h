@@ -15,3 +15,5 @@
 #define SCHED_RR        0		//added task 4
 #define SCHED_PRIORITY  1		//added task 4
 #define SCHEDPOLICY     SCHED_PRIORITY   // added task 4 set to SCHED_RR for round-robin
+#define MAXEFFPRIORITY	99		//added for task 5
+#define AGING	   1			//added for task 5 1= aging on, 0 = off

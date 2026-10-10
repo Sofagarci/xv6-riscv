@@ -533,12 +533,21 @@ scheduler(void)
 #else   // SCHED_PRIORITY
 
 // Priority used for scheduling decisions. Caller must hold p->lock.
-// (Task 5 will add aging here.)
+
+//TASK5
+// Effective priority: priority plus time spent waiting in the ready queue.
+// Caller must hold p->lock.
 static int
 effpriority(struct proc *p)
 {
+#if AGING
+  int e = p->priority + (int)(ticks - p->readytime);
+  return e > MAXEFFPRIORITY ? MAXEFFPRIORITY : e;
+#else
   return p->priority;
+#endif
 }
+
 
 void
 scheduler(void)
