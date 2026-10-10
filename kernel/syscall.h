@@ -22,4 +22,6 @@
 #define SYS_close  21
 #define SYS_sync   22
 #define SYS_wait2  23
-#define SYS_getprocs	25 //added
+#define SYS_getprocs	25 //added task 1
+#define SYS_getpriority 26 //added task2 
+#define SYS_setpriority 27 //added task 2

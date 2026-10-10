@@ -117,11 +117,39 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
-//added
+//added task 1
 uint64
 sys_getprocs(void)
 {
   uint64 addr;
   argaddr(0, &addr);   //might need to change. need to run first
   return getprocs(addr);
+}
+
+//added task 2
+uint64
+sys_getpriority(void)
+{
+  struct proc *p = myproc();
+  int pr;
+
+  acquire(&p->lock);
+  pr = p->priority;
+  release(&p->lock);
+  return pr;
+}
+
+uint64
+sys_setpriority(void)
+{
+  int n;
+  struct proc *p = myproc();
+
+  argint(0, &n);   // use the same style your sys_sleep uses
+  if(n < 0 || n > 49)
+    return -1;
+  acquire(&p->lock);
+  p->priority = n;
+  release(&p->lock);
+  return 0;
 }

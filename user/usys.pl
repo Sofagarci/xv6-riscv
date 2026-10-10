@@ -44,4 +44,6 @@ entry("sbrk");
 entry("pause");
 entry("uptime");
 entry("sync");
-entry("getprocs");	 #added
+entry("getprocs");	 #added task 1
+entry("getpriority");	#added task2
+entry("setpriority"); 	# added task2
