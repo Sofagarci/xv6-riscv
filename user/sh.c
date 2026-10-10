@@ -168,7 +168,21 @@ main(void)
       cmd[strlen(cmd) - 1] = 0; // chop \n
       if (chdir(cmd + 3) < 0)
         fprintf(2, "cannot cd %s\n", cmd + 3);
-    } else {
+    }
+//Extra credit Task6
+    // built-in: setpriority <n> (must run in the shell itself, not a child)
+    if(memcmp(buf, "setpriority ", 12) == 0){
+      if(setpriority(atoi(buf+12)) < 0)
+        fprintf(2, "setpriority: priority must be 0-49\n");
+      continue;
+    }
+//Task6
+    // built-in: getpriority
+    if(memcmp(buf, "getpriority", 11) == 0 && (buf[11] == '\n' || buf[11] == 0)){
+      printf("%d\n", getpriority());
+      continue;
+    } 
+      else {
       if (fork1() == 0)
         runcmd(parsecmd(cmd));
       wait(0);
