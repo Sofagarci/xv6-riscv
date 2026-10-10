@@ -476,6 +476,8 @@ kwait2(uint64 addr, uint64 addr2)
     acquire(&wait_lock);
   }
 }
+
+#if SCHEDPOLICY == SCHED_RR 	//added task 4, this is so func compiles only for round robin (scheduler)
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -526,6 +528,58 @@ scheduler(void)
     }
   }
 }
+//WRAPPING UP TASK 4 ADDED
+//this so the priority version replaces it when the policy is set to priority
+#else   // SCHED_PRIORITY
+
+// Priority used for scheduling decisions. Caller must hold p->lock.
+// (Task 5 will add aging here.)
+static int
+effpriority(struct proc *p)
+{
+  return p->priority;
+}
+
+void
+scheduler(void)
+{
+  struct proc *p;
+  struct proc *best;
+  struct cpu *c = mycpu();
+
+  c->proc = 0;
+  for(;;){
+    intr_on();
+
+    // Find the RUNNABLE process with the highest priority. We keep
+    // best->lock held while scanning; every other lock is released.
+    best = 0;
+    for(p = proc; p < &proc[NPROC]; p++){
+      acquire(&p->lock);
+      if(p->state == RUNNABLE &&
+         (best == 0 || effpriority(p) > effpriority(best))){
+        if(best)
+          release(&best->lock);
+        best = p;           // keep p->lock held
+        continue;
+      }
+      release(&p->lock);
+    }
+
+    if(best == 0){
+      asm volatile("wfi");  // nothing to run; use the same idle code as your RR scheduler
+      continue;
+    }
+
+    // best->lock is held, as swtch() requires
+    best->state = RUNNING;
+    c->proc = best;
+    swtch(&c->context, &best->context);
+    c->proc = 0;
+    release(&best->lock);
+  }
+}
+#endif
 
 // Switch to scheduler.  Must hold only p->lock
 // and have changed proc->state. Saves and restores
