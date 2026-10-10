@@ -88,7 +88,8 @@ struct proc {
   int xstate;           // Exit status to be returned to parent's wait
   int pid;              // Process ID
   uint cputime; 	// Ticks of CPU time used
-  int priority; 		// process priority (0,49) ADDED
+  int priority; 		// process priority (0,49) ADDED task 2
+  uint readytime; 	//ticks when process last becomes runnable
   // wait_lock must be held when using this:
   struct proc *parent; // Parent process
 

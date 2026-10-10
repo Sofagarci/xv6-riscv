@@ -15,6 +15,7 @@ struct pstat {
   int ppid;             // Parent process ID
   char name[16];        // Command name
   int priority;		// added task 2 priority
+  uint readytime;	//tick for when process becomes runnable
 };
 
 #endif

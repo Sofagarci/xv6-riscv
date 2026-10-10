@@ -230,6 +230,8 @@ userinit(void)
 
   p->state = RUNNABLE;
 
+  p->readytime = ticks;	//added task 3, just added this after every state = RUNNABLE to edit
+
   release(&p->lock);
 }
 
@@ -304,6 +306,7 @@ kfork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+  np->readytime = ticks;		//added for task 3
   release(&np->lock);
 
   return pid;
@@ -558,6 +561,7 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
+  p->readytime = ticks;		//task 3
   sched();
   release(&p->lock);
 }
@@ -643,6 +647,7 @@ wakeup(void *chan)
       // go to sleep, also set it back to RUNNING.
       if (p->state == SLEEPING) {
         p->state = RUNNABLE;
+        p->readytime = ticks;
       }
     }
     release(&p->lock);
@@ -667,6 +672,7 @@ kkill(int pid)
       if (p->state == SLEEPING) {
         // Wake process from sleep().
         p->state = RUNNABLE;
+	p->readytime = ticks;
       }
       release(&p->lock);
       return 0;
@@ -780,7 +786,8 @@ getprocs(uint64 addr)
     info.state = p->state;
     info.size = p->sz;
     info.ppid = p->parent ? p->parent->pid : 0;
-    info.priority = p->priority;
+    info.priority = p->priority;	//task2
+    info.readytime = p->readytime; 	//task3
     safestrcpy(info.name, p->name, sizeof(info.name));
     release(&p->lock);
     release(&wait_lock);
